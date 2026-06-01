@@ -26,6 +26,9 @@ from capture.middleware import AllowlistMiddleware, allowed_hosts
 from capture.routes import serve_asset
 from capture.storage import ensure_asset_dir, public_url, store_jpeg
 from capture.validate import UrlValidationError, validate_capture_url
+from capture.webui import WebUIAuthMiddleware, enabled as webui_enabled
+from capture.webui import record_capture as webui_record_capture
+from capture.webui import webui_routes
 
 logging.basicConfig(
     level=os.environ.get("CAPTURE_LOG_LEVEL", "INFO").upper(),
@@ -82,6 +85,13 @@ _CAPTURE_ANNOTATIONS = ToolAnnotations(
 )
 
 
+def _tool_client(ctx: Context) -> str | None:
+    req = getattr(ctx.request_context, "request", None)
+    if req is None or req.client is None:
+        return None
+    return req.client.host
+
+
 @mcp.tool(
     name="capture_screenshot",
     title="Capture webpage screenshot",
@@ -94,16 +104,43 @@ _CAPTURE_ANNOTATIONS = ToolAnnotations(
     structured_output=True,
 )
 async def capture_screenshot(url: str, ctx: Context) -> CallToolResult:
+    client = _tool_client(ctx)
     try:
         target = validate_capture_url(url)
     except UrlValidationError as exc:
+        rejected = url.strip() if isinstance(url, str) else None
+        error = str(exc)
+        if rejected:
+            error = f"{error}: {rejected[:500]}"
+        webui_record_capture(
+            status=400,
+            client=client,
+            source_url=None,
+            error=error,
+        )
         raise ValueError(str(exc)) from exc
 
     app_ctx: AppContext = ctx.request_context.lifespan_context
-    png = await capture_page_screenshot(app_ctx.pool, target)
-    jpeg = png_to_clean_jpeg(png)
-    asset_path = store_jpeg(jpeg)
-    image_url = public_url(asset_path)
+    try:
+        png = await capture_page_screenshot(app_ctx.pool, target)
+        jpeg = png_to_clean_jpeg(png)
+        asset_path = store_jpeg(jpeg)
+        image_url = public_url(asset_path)
+    except Exception as exc:
+        webui_record_capture(
+            status=500,
+            client=client,
+            source_url=target,
+            error=str(exc),
+        )
+        raise
+
+    webui_record_capture(
+        status=200,
+        client=client,
+        source_url=target,
+        image_url=image_url,
+    )
 
     structured: dict[str, Any] = {
         "image_url": image_url,
@@ -138,14 +175,20 @@ async def starlette_lifespan(_app: Starlette) -> AsyncIterator[None]:
         yield
 
 
+_routes = [
+    Route("/healthz", healthz, methods=["GET", "HEAD"]),
+    Route("/r/{token}.jpg", serve_asset, methods=["GET", "HEAD"]),
+]
+if webui_enabled():
+    _routes.extend(webui_routes())
+_routes.append(Mount("/", mcp.streamable_http_app()))
+
 app = Starlette(
-    routes=[
-        Route("/healthz", healthz, methods=["GET", "HEAD"]),
-        Route("/r/{token}.jpg", serve_asset, methods=["GET", "HEAD"]),
-        Mount("/", mcp.streamable_http_app()),
-    ],
+    routes=_routes,
     lifespan=starlette_lifespan,
 )
 
 app.add_middleware(AllowlistMiddleware)
+if webui_enabled():
+    app.add_middleware(WebUIAuthMiddleware)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts())

@@ -1,0 +1,16 @@
+* { box-sizing: border-box; }
+body { font-family: system-ui, sans-serif; margin: 0; color: #111; background: #f4f4f4; font-size: 13px; }
+.wrap { max-width: 1000px; margin: 0 auto; padding: 24px 16px; }
+h1 { font-size: 18px; font-weight: 600; margin: 0 0 16px; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.pill { background: #fff; border: 1px solid #ddd; padding: 4px 8px; border-radius: 4px; }
+.table-wrap { background: #fff; border: 1px solid #ddd; overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #eee; }
+th { font-size: 11px; color: #666; background: #fafafa; }
+.url { word-break: break-all; }
+a { color: #06c; }
+.s2xx { color: #111; }
+.s4xx, .s5xx { color: #c00; }
+.muted { color: #888; }
+.empty td { text-align: center; color: #888; padding: 20px; }

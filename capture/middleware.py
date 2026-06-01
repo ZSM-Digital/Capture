@@ -8,6 +8,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from capture.storage import ASSET_PATH_RE
+from capture.webui import is_webui_request
 
 logger = logging.getLogger("capture.security")
 
@@ -36,14 +37,16 @@ class AllowlistMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
         method = request.method.upper()
+        client = request.client.host if request.client else None
+        if is_webui_request(request):
+            return await call_next(request)
         if _path_is_allowed(path, method):
             response = await call_next(request)
             _log_allowed(request, response.status_code)
             return response
 
-        client = request.client.host if request.client else "unknown"
         if _log_blocked_probes():
-            logger.debug("blocked %s %s from %s", method, path, client)
+            logger.debug("blocked %s %s from %s", method, path, client or "unknown")
         return Response(status_code=403, content=b"")
 
 

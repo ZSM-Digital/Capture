@@ -96,6 +96,9 @@ Use HTTPS in production.
 | `CAPTURE_TIMEOUT_MS` | `30000` | Page load timeout |
 | `CAPTURE_VIEWPORT_WIDTH` | `1280` | Browser viewport width |
 | `CAPTURE_VIEWPORT_HEIGHT` | `720` | Browser viewport height |
+| `CAPTURE_WEB_UI` | `0` | Enable capture log dashboard at `/webui` |
+| `CAPTURE_WEB_UI_PIN` | `261913` | PIN required to access the web UI |
+| `CAPTURE_WEB_UI_LINKS` | `1` | Clickable source and screenshot URLs in the web UI (`0` for plain text) |
 
 See `.env.example` for a minimal working set.
 

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capture — WebUI</title>
+<link rel="stylesheet" href="/webui/app.css?v=2">
+</head>
+<body>
+<main class="wrap">
+<header><h1>Capture</h1></header>
+<div class="bar">
+<span class="pill">Total <strong id="total">0</strong></span>
+<span class="pill">Last 5m <strong id="recent">0</strong></span>
+<span class="pill">Poll <strong id="status" class="muted">…</strong></span>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>Time</th><th>Site</th><th>Screenshot</th><th>Status</th><th>Client</th></tr>
+</thead>
+<tbody id="rows"></tbody>
+</table>
+</div>
+</main>
+<script src="/webui/app.js?v=2"></script>
+</body>
+</html>

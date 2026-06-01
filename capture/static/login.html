@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capture — sign in</title>
+<link rel="stylesheet" href="/webui/login.css">
+</head>
+<body>
+<main class="wrap login-wrap">
+<header>
+<h1>Capture</h1>
+<p class="sub">Enter your pin to access WebUI</p>
+</header>
+<form class="login-form" method="post" action="/webui/login">
+<label for="pin">PIN</label>
+<input id="pin" name="pin" type="password" inputmode="numeric" autocomplete="off" required autofocus>
+<button type="submit">Sign in</button>
+<p id="err" class="login-err" hidden>Incorrect PIN</p>
+</form>
+</main>
+<script>
+if (new URLSearchParams(location.search).has("bad")) {
+  document.getElementById("err").hidden = false;
+}
+</script>
+</body>
+</html>
